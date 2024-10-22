@@ -1,21 +1,57 @@
-//using {com.satinfotech.purchaseform as purchaseform} from '../db/schema';
 using { CE_PURCHASEORDER_0001 as purchaseorderapi } from './external/CE_PURCHASEORDER_0001';
-
+using {com.satinfotech.purchaseform as purchaseform} from '../db/schema';
 service PurchaseOrderService {
 
-    entity PurchaseOrderSrv as projection on purchaseorderapi.PurchaseOrder{
-        PurchaseOrder,
-        Language,
-        PurchasingOrganization as Company,
-        CompanyCode,
-        PaymentTerms,
-        PurchaseOrderDate,
-        TaxReturnCountry as CountryRegOfSalesTaxIDNumber,
-        Supplier,
-        VATRegistrationCountry as ComapnyCodeCountry,
-        DocumentCurrency as Currency,  
+    // entity PurchaseOrderSrv as projection on purchaseorderapi.PurchaseOrder {
+    //     PurchaseOrder,
+    //     Language,
+    //     PurchasingOrganization as Company,
+    //     CompanyCode,
+    //     PaymentTerms,
+    //     PurchaseOrderDate,
+    //     TaxReturnCountry as CountryRegOfSalesTaxIDNumber,
+    //     Supplier,
+    //     VATRegistrationCountry as ComapnyCodeCountry,
+    //     DocumentCurrency as Currency,
+    //     _SupplierAddress.SupplierAddressID,
+    //    // _SupplierAddress
+       
+    // };
+    entity PurchaseOrderSrv as projection on purchaseorderapi.PurchaseOrder 
+    {
+    key PurchaseOrder,
+    Language,
+    PurchasingOrganization as Company,
+    CompanyCode,
+    PaymentTerms,
+    PurchaseOrderDate,
+    TaxReturnCountry as CountryRegOfSalesTaxIDNumber,
+    DocumentCurrency as Currency,
+    Supplier,
+    // _SupplierAddress.SupplierAddressID as SupplierAddressID,
+    // _SupplierAddress.CityName as CityName,
+    // _SupplierAddress.PostalCode as PostalCode,
+    // _SupplierAddress.StreetName as StreetName,
+    // _SupplierAddress.EmailAddress as EmailAddress,
 
+    
+}actions{
+        action printForm(labelname:String
+      @Common.ValueList: {
+        CollectionPath: 'Label', 
+        Label: 'Label',
+        Parameters: [
+          {
+            $Type: 'Common.ValueListParameterInOut',
+            LocalDataProperty: 'labelname',  
+            ValueListProperty: 'Label'    
+          }
+        ]
+      }) returns String
     };
+
+
+      entity Label           as projection on purchaseform.Label;
     entity PurchaseOrderItem as projection on purchaseorderapi.PurchaseOrderItem{
         GrossAmount,
         PurchaseOrder,
@@ -97,7 +133,9 @@ entity PurchaseOrderSupplierAddress as projection on purchaseorderapi.PurchaseOr
     StreetName,
     PurchaseOrder,
     OrganizationName1,
-    EmailAddress
+    EmailAddress,
+    SupplierAddressID,
+
 
 
 };
@@ -105,3 +143,11 @@ entity PurchaseOrderSupplierAddress as projection on purchaseorderapi.PurchaseOr
 
 }
  
+annotate PurchaseOrderService.Label with @(UI.LineItem: [
+    {
+        $Type: 'UI.DataField',
+        Value: Label
+    }
+],
+
+);
