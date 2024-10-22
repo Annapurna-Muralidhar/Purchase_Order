@@ -14,7 +14,7 @@ service PurchaseOrderService {
         Supplier,
         VATRegistrationCountry as ComapnyCodeCountry,
         DocumentCurrency as Currency,  
-          
+
     };
     entity PurchaseOrderItem as projection on purchaseorderapi.PurchaseOrderItem{
         GrossAmount,
@@ -30,6 +30,7 @@ service PurchaseOrderService {
         BaseUnit,
         ProductTypeCode,
         CompanyCode,
+        
         
     }
     entity PurOrdItemPricingElement as projection on purchaseorderapi.PurOrderItemPricingElement{
