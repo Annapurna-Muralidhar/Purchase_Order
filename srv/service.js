@@ -5,36 +5,12 @@ module.exports = cds.service.impl(async function () {
     const purchaseorderapi = await cds.connect.to('CE_PURCHASEORDER_0001');
 
     this.on('READ', 'PurchaseOrderSrv', async (req) => {
-        const expand = req.query.SELECT.expand || [];
-        let result;
-    
-        // If the request has expand for _SupplierAddress
-        if (expand.includes('_SupplierAddress')) {
-            try {
-                // Using the expanded query with proper navigation
-                result = await purchaseorderapi.run(
-                    SELECT.from('PurchaseOrder')
-                        .expand('_SupplierAddress', {
-                            $select: ['CityName', 'PostalCode', 'StreetName', 'OrganizationName1', 'EmailAddress', 'SupplierAddressID']
-                        })
-                );
-            } catch (error) {
-                console.error('Error during request to remote service:', error);
-                throw new Error('Error fetching expanded data');
-            }
-        } else {
-            // Regular query without expand
-            result = await purchaseorderapi.run(req.query);
-        }
-    
-        return result;
-    });
-    
+        return await purchaseorderapi.run(req.query);
+    });   
 
     this.on('READ', 'PurchaseOrderItem', async (req) => {
             return await purchaseorderapi.run(req.query);
     }),
-
 
     this.on('READ', 'PurOrdItemPricingElement', async (req) => {
             return await purchaseorderapi.run(req.query);;
@@ -44,11 +20,9 @@ module.exports = cds.service.impl(async function () {
             return await purchaseorderapi.run(req.query);
     });
 
-
     this.on('READ', 'PurchaseOrderScheduleLine', async (req) => {
           return await purchaseorderapi.run(req.query);
     });
-
 
     this.on('READ', 'PurchaseOrderAccountAssignment', async (req) => {
         return await purchaseorderapi.run(req.query);
@@ -65,52 +39,54 @@ module.exports = cds.service.impl(async function () {
     this.on('READ', 'PurchaseOrderSupplierAddress', async (req) => {
         return await purchaseorderapi.run(req.query);
     });
+
     const {Label}=this.entities
     this.on('printForm','PurchaseOrderSrv', async (req) => {
         const {PurchaseOrderSrv,PurchaseOrderItem,PurOrdItemPricingElement,POSubcontractingComponent,
             PurchaseOrderScheduleLine,PurchaseOrderAccountAssignment,PurchaseOrderItemNote
-            ,PurchaseOrderNote}=this.entities
-        console.log(req.params);
-        console.log(req.data);
+            ,PurchaseOrderNote,SupplierInfo}=this.entities
+        // console.log(req.params);
+        // console.log(req.data);
         
         const { PurchaseOrder } = req.params[0]; 
-        console.log(PurchaseOrder);
+        //console.log(PurchaseOrder);
 
         const rowData = await purchaseorderapi.run(SELECT.from(PurchaseOrderSrv).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("rowData:",rowData);
+        //console.log("rowData:",rowData);
+
+        /* let query1 = SELECT.from(TransferPostingDocument).columns([{ref:['to_MaterialDocumentHeader'],expand:['*']}]).where({MaterialDocument: materialdocument});*/
+
+        const SupplierInfor = await purchaseorderapi.run(SELECT.from(SupplierInfo).columns([{ref:['_SupplierAddress'],expand:['*']}]).where({ PurchaseOrder: PurchaseOrder }));
+        //console.log("SupplierInfo:",SupplierInfor);
 
         const PurchaseOrderitem=await purchaseorderapi.run(SELECT.from(PurchaseOrderItem).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("PurchaseOrderitem :",PurchaseOrderitem);
+        //console.log("PurchaseOrderitem :",PurchaseOrderitem);
 
         const PricingElements=await purchaseorderapi.run(SELECT.from(PurOrdItemPricingElement).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("PricingElements:",PricingElements);
+        //.log("PricingElements:",PricingElements);
 
         const ContractingComponent=await purchaseorderapi.run(SELECT.from(POSubcontractingComponent).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("ContractingComponent:",ContractingComponent);
+        //console.log("ContractingComponent:",ContractingComponent);
 
         const ScheduleLine=await purchaseorderapi.run(SELECT.from(PurchaseOrderScheduleLine).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("ScheduleLine:",ScheduleLine);
+        //console.log("ScheduleLine:",ScheduleLine);
 
         const AccountAssignment=await purchaseorderapi.run(SELECT.from(PurchaseOrderAccountAssignment).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("AccountAssignment: ",AccountAssignment);
+        //console.log("AccountAssignment: ",AccountAssignment);
 
         const ItemNote=await purchaseorderapi.run(SELECT.from(PurchaseOrderItemNote).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("ItemNote:",ItemNote);
+        //console.log("ItemNote:",ItemNote);
 
         const OrderNote=await purchaseorderapi.run(SELECT.from(PurchaseOrderNote).where({ PurchaseOrder: PurchaseOrder }));
-        console.log("OrderNote:",OrderNote);
+        //console.log("OrderNote:",OrderNote);
         
         const structuredData = {
             PurchaseOrderNode: {
                 ...rowData[0],
-                SupplierInfo: {
-                    SupplierAddressID: rowData[0]._SupplierAddress ? rowData[0]._SupplierAddress.SupplierAddressID : "",
-                    CityName: rowData[0]._SupplierAddress ? rowData[0]._SupplierAddress.CityName : "",
-                    PostalCode: rowData[0]._SupplierAddress ? rowData[0]._SupplierAddress.PostalCode : "",
-                    StreetName: rowData[0]._SupplierAddress ? rowData[0]._SupplierAddress.StreetName : "",
-                    EmailAddress: rowData[0]._SupplierAddress ? rowData[0]._SupplierAddress.EmailAddress : "",
-            
-                },
+                SupplierAddress: SupplierInfor.map(supplier => ({
+                    ...supplier._SupplierAddress
+                }))[0],
+        
                 PurchaseOrderitems: {
                     PurchaseOrderitem: PurchaseOrderitem.map(item => ({
                         ...item,
@@ -136,7 +112,7 @@ module.exports = cds.service.impl(async function () {
                 OrderNote
             }
         };
-        console.log(structuredData);
+        //console.log(structuredData);
         
         function ensureEmptyTags(obj) {
             if (Array.isArray(obj)) {
@@ -153,7 +129,7 @@ module.exports = cds.service.impl(async function () {
         const xml = create(updatedJsonData).end({ prettyPrint: true });
         console.log("Generated XML:", xml);
         const base64Xml = Buffer.from(xml).toString('base64');
-        console.log("Base64 Encoded XML:", base64Xml);
+        //console.log("Base64 Encoded XML:", base64Xml);
         try {
             const authResponse = await axios.get('https://chembonddev.authentication.us10.hana.ondemand.com/oauth/token', {
                 params: {
@@ -165,7 +141,7 @@ module.exports = cds.service.impl(async function () {
                 }
             });
             const accessToken = authResponse.data.access_token;
-            console.log("Access Token:", accessToken);
+            //console.log("Access Token:", accessToken);
             const pdfResponse = await axios.post('https://adsrestapi-formsprocessing.cfapps.us10.hana.ondemand.com/v1/adsRender/pdf?templateSource=storageName', {
                 xdpTemplate: labelname,
                 xmlData: base64Xml, 
@@ -180,7 +156,7 @@ module.exports = cds.service.impl(async function () {
                 }
             });
             const fileContent = pdfResponse.data.fileContent;
-            console.log("File Content:", fileContent);
+           // console.log("File Content:", fileContent);
             return fileContent;
   
         } catch (error) {

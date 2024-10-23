@@ -17,6 +17,7 @@ service PurchaseOrderService {
     //    // _SupplierAddress
        
     // };
+//@cds.redirection.target
     entity PurchaseOrderSrv as projection on purchaseorderapi.PurchaseOrder 
     {
     key PurchaseOrder,
@@ -28,8 +29,9 @@ service PurchaseOrderService {
     TaxReturnCountry as CountryRegOfSalesTaxIDNumber,
     DocumentCurrency as Currency,
     Supplier,
-    // _SupplierAddress.SupplierAddressID as SupplierAddressID,
-    // _SupplierAddress.CityName as CityName,
+    //_SupplierAddress    
+    //_SupplierAddress.SupplierAddressID as SupplierAddressID,
+    //_SupplierAddress.CityName as CityName,
     // _SupplierAddress.PostalCode as PostalCode,
     // _SupplierAddress.StreetName as StreetName,
     // _SupplierAddress.EmailAddress as EmailAddress,
@@ -68,6 +70,11 @@ service PurchaseOrderService {
         CompanyCode,
         
         
+    }
+
+    entity SupplierInfo as projection on purchaseorderapi.PurchaseOrder 
+    {
+    _SupplierAddress     
     }
     entity PurOrdItemPricingElement as projection on purchaseorderapi.PurOrderItemPricingElement{
         PurchaseOrder,
