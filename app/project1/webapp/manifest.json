@@ -102,7 +102,7 @@
           "name": "sap.fe.templates.ListReport",
           "options": {
             "settings": {
-              "initislLoad":true,
+              "initialLoad":true,
               "contextPath": "/PurchaseOrderSrv",
               "variantManagement": "Page",
               "navigation": {
